@@ -1,4 +1,5 @@
 
+#include "GStreamerModule.h"
 extern "C"
 {
 #include <gst/gst.h>
@@ -20,5 +21,5 @@ Initialize(char const* bin, char const* plugin)
     gst_registry_scan_path(registry, bin);
     gst_registry_scan_path(registry, plugin);
 
-    return gst_is_initialized();
+    return (bool)gst_is_initialized();
 }

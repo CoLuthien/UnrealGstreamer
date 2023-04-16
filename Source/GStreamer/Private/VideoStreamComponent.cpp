@@ -15,6 +15,10 @@ static constexpr std::string_view base_config =
     "video/x-raw,format=NV12 ! x264enc speed-preset=ultrafast bitrate=16392 tune=zerolatency ! "
     "rtph264pay config-interval=0 name=pay0 pt=96 ";
 
+
+
+ 
+
 UVideoStreamComponent::UVideoStreamComponent() : Super()
 {
     this->bCaptureEveryFrame          = true;
@@ -87,7 +91,8 @@ UVideoStreamComponent::BeginPlay()
     this->TextureTarget = NewObject<UTextureRenderTarget2D>();
     FString&& OwnerName = GetOwner()->GetName();
 
-    std::string_view url = TCHAR_TO_ANSI(*("/" + OwnerName + GetName()));
+    std::string_view url = "/test";
+    std::string_view config = TCHAR_TO_ANSI(*stream_config);
     ConfigureStream(Width, Height, url, base_config);
     ConfigureCapture();
 }

@@ -4,25 +4,35 @@
 #include "GStreamerModule.h"
 #include "Runtime/Core/Public/Misc/Paths.h"
 #include <Interfaces/IPluginManager.h>
+#include <HAL/FileManager.h>
+#include <Windows/WindowsPlatformProcess.h>
 
 #if PLATFORM_WINDOWS
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include <windows.h>
 #include "Windows/HideWindowsPlatformTypes.h"
 #endif
+#include <CoreMinimal.h>
+#include <string_view>
 #define LOCTEXT_NAMESPACE "FGStreamerModule"
+
+static const TArray<FString> DLLPaths{
+    L"glib-2.0-0.dll",
+    L"avcodec-58.dll",
+    L"gobject-2.0-0.dll",
+    L"gstreamer-1.0-0.dll",
+    L"gstvideo-1.0-0.dll",
+    L"gstapp-1.0-0.dll",
+    L"gstrtspserver-1.0-0.dll",
+    L"x264-160.dll",
+};
 
 static FString
 GetGstRoot()
 {
-    auto&& PluginDir = IPluginManager::Get().FindPlugin("GStreamer")->GetBaseDir();
-    auto RootPath = PluginDir + TEXT("/Sources/Thirdparty/install/bin");
-    if (RootPath.IsEmpty())
-        RootPath = FPlatformMisc::GetEnvironmentVariable(TEXT("GSTREAMER_1_0_ROOT_MSVC_X86_64"));
-    if (RootPath.IsEmpty())
-        RootPath = FPlatformMisc::GetEnvironmentVariable(TEXT("GSTREAMER_ROOT_X86_64"));
-    if (RootPath.IsEmpty())
-        RootPath = FPlatformMisc::GetEnvironmentVariable(TEXT("GSTREAMER_ROOT"));
+    auto&& PluginDir = FPaths::ProjectPluginsDir();
+    auto&& RootPath = PluginDir + TEXT("/GStreamer/Source/Thirdparty/install");
+    UE_LOG(LogTemp, Log, TEXT("Root: %s"), *RootPath);
     return RootPath;
 }
 
@@ -35,24 +45,22 @@ FGStreamerModule::StartupModule()
     FString BinPath, PluginPath;
 
 #if PLATFORM_WINDOWS
-    FString RootPath = FPaths::Combine(GetGstRoot(), TEXT("msvc_x86_64"));
+    FString RootPath = GetGstRoot();
     if (!RootPath.IsEmpty())
     {
         BinPath = FPaths::Combine(RootPath, TEXT("bin"));
         if (FPaths::DirectoryExists(BinPath))
         {
-            SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
-            // SetDllDirectoryW(*BinPath);
-            AddDllDirectory(*BinPath);
-        }
-        else
-        {
-            BinPath = "";
-        }
-        PluginPath = FPaths::Combine(RootPath, TEXT("lib"), TEXT("gstreamer-1.0"));
-        if (!FPaths::DirectoryExists(PluginPath))
-        {
-            PluginPath = "";
+            UE_LOG(LogTemp, Log, TEXT("Root: %s"), *RootPath);
+            auto Path = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*BinPath);
+            //SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+            FWindowsPlatformProcess::AddDllDirectory(*Path);
+            for (auto const& DLLName : DLLPaths)
+            {
+                auto&& DLLPath = FPaths::Combine(Path, DLLName);
+                void* DLL = FWindowsPlatformProcess::GetDllHandle(*DLLPath);
+                m_dll.Add(DLL);
+            }
         }
     }
     else
@@ -68,6 +76,10 @@ FGStreamerModule::ShutdownModule()
 {
     // This function may be called during shutdown to clean up your module.  For modules that
     // support dynamic reloading, we call this function before unloading the module.
+    for (void* DLL : m_dll)
+    {
+        FWindowsPlatformProcess::FreeDllHandle(DLL);
+    }
 }
 
 #undef LOCTEXT_NAMESPACE
