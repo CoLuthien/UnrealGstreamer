@@ -1,14 +1,53 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 using System.IO;
+using System.Linq;
+using System.Diagnostics;
+using System.Text;
 using UnrealBuildTool;
+
 
 public class GStreamer : ModuleRules
 {
+
+    private string ModulePath
+    {
+        get { return ModuleDirectory; }
+    }
+
+    private string ThirdPartyPath
+    {
+        get
+        {
+            return Path.GetFullPath(Path.Combine(ModulePath, "../Thirdparty/gstreamer"));
+        }
+    }
+    private string LibraryPath
+    {
+        get
+        {
+            return Path.GetFullPath(Path.Combine(ModulePath, "../Thirdparty/install"));
+        }
+    }
+    private void BuildGstreamer()
+    {
+        string SetupCommand =
+            "meson setup " + ThirdPartyPath + "/build " + ThirdPartyPath + " --vsenv";
+        string BuildCommand =
+            "meson compile -C " + ThirdPartyPath + "/build ";
+        string InstallCommand =
+            "meson install -C " + ThirdPartyPath + "/build  --destdir " + LibraryPath;
+        if (System.IO.Directory.Exists(LibraryPath))
+        {
+            return;
+        }
+        ExecuteCommandSync(SetupCommand);
+        ExecuteCommandSync(BuildCommand);
+        ExecuteCommandSync(InstallCommand);
+    }
     public GStreamer(ReadOnlyTargetRules Target) : base(Target)
     {
-        CppStandard = CppStandardVersion.Cpp17;
-        DefaultBuildSettings = BuildSettingsVersion.V2;
+        CppStandard = CppStandardVersion.Cpp20;
         PCHUsage = PCHUsageMode.NoPCHs; // UseExplicitOrSharedPCHs;
         bUseUnity = false;
         bEnableUndefinedIdentifierWarnings = false;
@@ -18,64 +57,72 @@ public class GStreamer : ModuleRules
                 "Core",
                 "CoreUObject",
                 "Engine",
-                "InputCore",
                 "RHI",
                 "RenderCore",
-                "Slate",
-                "SlateCore"
             }
         );
 
-        string GStreamerRoot = System.Environment.GetEnvironmentVariable("IMAST_GSTREAMER");
+        PrivateDependencyModuleNames.AddRange(
+            new string[] {
+                "Projects",
+            });
+
+        BuildGstreamer();
+
         System.Console.WriteLine("*********************************************GSTREAMER PATH*********************************************");
-        System.Console.WriteLine("GStreamerRoot : " + GStreamerRoot);
         if (Target.Platform == UnrealTargetPlatform.Win64)
         {
-            string GStreamerWindows = Path.Combine(GStreamerRoot, "msvc_x86_64");
-            System.Console.WriteLine("GStreamerWindows : " + GStreamerWindows);
 
-            PrivateIncludePaths.Add(Path.Combine(GStreamerWindows, "include"));
-            PrivateIncludePaths.Add(Path.Combine(GStreamerWindows, "include", "gstreamer-1.0"));
-            PrivateIncludePaths.Add(Path.Combine(GStreamerWindows, "include", "glib-2.0"));
-            PrivateIncludePaths.Add(Path.Combine(GStreamerWindows, "lib", "glib-2.0", "include"));
+            PrivateIncludePaths.Add(Path.Combine(LibraryPath, "include"));
+            PrivateIncludePaths.Add(Path.Combine(LibraryPath, "include", "gstreamer-1.0"));
+            PrivateIncludePaths.Add(Path.Combine(LibraryPath, "include", "glib-2.0"));
+            PrivateIncludePaths.Add(Path.Combine(LibraryPath, "lib", "glib-2.0", "include"));
 
-            PublicSystemLibraryPaths.Add(Path.Combine(GStreamerWindows, "lib"));
 
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerWindows, "lib", "glib-2.0.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerWindows, "lib", "gobject-2.0.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerWindows, "lib", "gstreamer-1.0.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerWindows, "lib", "gstvideo-1.0.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerWindows, "lib", "gstapp-1.0.lib"));
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerWindows, "lib", "gstrtspserver-1.0.lib"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "lib", "glib-2.0.lib"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "lib", "gobject-2.0.lib"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "lib", "gstreamer-1.0.lib"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "lib", "gstvideo-1.0.lib"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "lib", "gstapp-1.0.lib"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "lib", "gstrtspserver-1.0.lib"));
 
+            PublicSystemLibraryPaths.Add(Path.Combine(LibraryPath, "bin"));
             PublicDelayLoadDLLs.Add("glib-2.0-0.dll");
             PublicDelayLoadDLLs.Add("gobject-2.0-0.dll");
             PublicDelayLoadDLLs.Add("gstreamer-1.0-0.dll");
             PublicDelayLoadDLLs.Add("gstvideo-1.0-0.dll");
             PublicDelayLoadDLLs.Add("gstapp-1.0-0.dll");
             PublicDelayLoadDLLs.Add("gstrtspserver-1.0-0.dll");
-        }
-        else if (Target.Platform == UnrealTargetPlatform.Linux)
-        {
-            string GStreamerLinux = Path.Combine(GStreamerRoot, "linux");
-            System.Console.WriteLine("GStreamerLinux : " + GStreamerLinux);
 
-            PublicIncludePaths.Add(Path.Combine(GStreamerLinux, "include", "gstreamer-1.0"));
-            PublicIncludePaths.Add(Path.Combine(GStreamerLinux, "include", "glib-2.0"));
-            PublicIncludePaths.Add(Path.Combine(GStreamerLinux, "include", "glib-2.0", "glib"));
-            PublicIncludePaths.Add(Path.Combine(GStreamerLinux, "include", "glib-2.0", "gobject"));
-            PublicIncludePaths.Add(Path.Combine(GStreamerLinux, "include", "glib-2.0", "gio"));
-
-            PublicSystemLibraryPaths.Add(Path.Combine(GStreamerLinux, "lib", "x86_64-linux-gnu"));
-
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerLinux, "lib", "x86_64-linux-gnu", "libgobject-2.0.so"));
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerLinux, "lib", "x86_64-linux-gnu", "libglib-2.0.so"));
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerLinux, "lib", "x86_64-linux-gnu", "libgstreamer-1.0.so"));
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerLinux, "lib", "x86_64-linux-gnu", "libgstrtspserver-1.0.so"));
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerLinux, "lib", "x86_64-linux-gnu", "libgstvideo-1.0.so"));
-            PublicAdditionalLibraries.Add(Path.Combine(GStreamerLinux, "lib", "x86_64-linux-gnu", "libgstapp-1.0.so"));
+            RuntimeDependencies.Add("glib-1.0-0.dll");
+            RuntimeDependencies.Add("gobject-2.0-0.dll");
+            RuntimeDependencies.Add("gstreamer-1.0-0.dll");
+            RuntimeDependencies.Add("gstvideo-1.0-0.dll");
+            RuntimeDependencies.Add("gstapp-1.0-0.dll");
+            RuntimeDependencies.Add("gstrtspserver-1.0-0.dll");
         }
         System.Console.WriteLine("********************************************************************************************************");
     }
+    private int ExecuteCommandSync(string command)
+    {
+        System.Console.WriteLine("Running: " + command);
+        var processInfo = new ProcessStartInfo("cmd.exe", "/c " + command)
+        {
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            WorkingDirectory = ModulePath
+        };
+
+        StringBuilder sb = new StringBuilder();
+        Process p = Process.Start(processInfo);
+        p.OutputDataReceived += (sender, args) => System.Console.WriteLine(args.Data);
+        p.BeginOutputReadLine();
+        p.WaitForExit();
+
+        return p.ExitCode;
+    }
+
 }
 

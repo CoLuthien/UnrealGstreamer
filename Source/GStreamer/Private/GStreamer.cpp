@@ -3,6 +3,7 @@
 #include "GStreamer.h"
 #include "GStreamerModule.h"
 #include "Runtime/Core/Public/Misc/Paths.h"
+#include <Interfaces/IPluginManager.h>
 
 #if PLATFORM_WINDOWS
 #include "Windows/AllowWindowsPlatformTypes.h"
@@ -14,7 +15,8 @@
 static FString
 GetGstRoot()
 {
-    auto RootPath = FPlatformMisc::GetEnvironmentVariable(TEXT("IMAST_GSTREAMER"));
+    auto&& PluginDir = IPluginManager::Get().FindPlugin("GStreamer")->GetBaseDir();
+    auto RootPath = PluginDir + TEXT("/Sources/Thirdparty/install/bin");
     if (RootPath.IsEmpty())
         RootPath = FPlatformMisc::GetEnvironmentVariable(TEXT("GSTREAMER_1_0_ROOT_MSVC_X86_64"));
     if (RootPath.IsEmpty())

@@ -10,6 +10,7 @@
 
 struct _GstRTSPMountPoints;
 
+
 class GSTREAMER_API IPixelBuffer
 {
 public:

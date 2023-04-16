@@ -1,0 +1,4 @@
+[submodule "Source/Thirdparty/gstreamer"]
+	path = Source/Thirdparty/gstreamer
+	url = https://gitlab.freedesktop.org/gstreamer/gstreamer.git
+	branch = 1.22.2

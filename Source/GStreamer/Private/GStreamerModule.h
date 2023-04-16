@@ -1,4 +1,5 @@
 
 #pragma once
+#include <GenericPlatform/GenericPlatformMisc.h> // solving misterious compile error 
 
-bool Initialize(char const* bin, char const* plugin);
+GSTREAMER_API bool Initialize(char const *bin, char const *plugin);

@@ -29,16 +29,16 @@ public:
     void ConfigureCapture();
 
 protected:
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GStreamer")
     int Width = 1920;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GStreamer")
     int Height = 1080;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GStreamer")
     FString stream_url;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (MultiLine = "true"))
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (MultiLine = "true"), Category = "GStreamer")
     FString stream_config;
 
 private:

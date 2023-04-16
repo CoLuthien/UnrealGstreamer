@@ -1,17 +1,17 @@
 
 #include "GstServer.h"
 
-#include <thread>
-#include <future>
-#include <iostream>
-#include <cassert>
-
 extern "C"
 {
 #include <gst/gst.h>
 #include <gst/rtsp-server/rtsp-server.h>
 #include <gst/app/gstappsrc.h>
 }
+
+#include <thread>
+#include <future>
+#include <iostream>
+#include <cassert>
 
 static constexpr char const* AppsrcName = "src";
 
