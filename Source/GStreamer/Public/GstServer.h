@@ -52,7 +52,6 @@ public:
         return &instance;
     }
     ~GstServer();
-
 public:
     GstServer& operator=(GstServer const&) = delete;
     GstServer& operator=(GstServer&&)      = delete;

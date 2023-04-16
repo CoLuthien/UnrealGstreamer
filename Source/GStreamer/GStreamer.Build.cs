@@ -32,15 +32,17 @@ public class GStreamer : ModuleRules
     private void BuildGstreamer()
     {
         string SetupCommand =
-            "meson setup " + ThirdPartyPath + "/build " + ThirdPartyPath + " --vsenv";
+            "meson setup " + ThirdPartyPath + "/build " + ThirdPartyPath + " --vsenv -Dgood=enabled";
         string BuildCommand =
             "meson compile -C " + ThirdPartyPath + "/build ";
         string InstallCommand =
             "meson install -C " + ThirdPartyPath + "/build  --destdir " + LibraryPath;
+        string GitCommand = "cd " + ModulePath + "/../../" + " && git submodule update --init --recursive";
         if (System.IO.Directory.Exists(LibraryPath))
         {
             return;
         }
+        ExecuteCommandSync(GitCommand);
         ExecuteCommandSync(SetupCommand);
         ExecuteCommandSync(BuildCommand);
         ExecuteCommandSync(InstallCommand);
@@ -88,18 +90,13 @@ public class GStreamer : ModuleRules
 
             PublicSystemLibraryPaths.Add(Path.Combine(LibraryPath, "bin"));
             PublicDelayLoadDLLs.Add("glib-2.0-0.dll");
+            PublicDelayLoadDLLs.Add("avcodec-58.dll");
             PublicDelayLoadDLLs.Add("gobject-2.0-0.dll");
             PublicDelayLoadDLLs.Add("gstreamer-1.0-0.dll");
             PublicDelayLoadDLLs.Add("gstvideo-1.0-0.dll");
             PublicDelayLoadDLLs.Add("gstapp-1.0-0.dll");
             PublicDelayLoadDLLs.Add("gstrtspserver-1.0-0.dll");
 
-            RuntimeDependencies.Add("glib-1.0-0.dll");
-            RuntimeDependencies.Add("gobject-2.0-0.dll");
-            RuntimeDependencies.Add("gstreamer-1.0-0.dll");
-            RuntimeDependencies.Add("gstvideo-1.0-0.dll");
-            RuntimeDependencies.Add("gstapp-1.0-0.dll");
-            RuntimeDependencies.Add("gstrtspserver-1.0-0.dll");
         }
         System.Console.WriteLine("********************************************************************************************************");
     }
