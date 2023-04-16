@@ -32,7 +32,7 @@ public class GStreamer : ModuleRules
     private void BuildGstreamer()
     {
         string SetupCommand =
-            "meson setup " + ThirdPartyPath + "/build " + ThirdPartyPath + " --vsenv";
+            "meson setup " + ThirdPartyPath + "/build " + ThirdPartyPath + " --vsenv -Dgpl=enabled";
         string BuildCommand =
             "meson compile -C " + ThirdPartyPath + "/build ";
         string InstallCommand =
